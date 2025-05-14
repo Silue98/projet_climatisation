@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useRouter } from 'expo-router';
 // import { RootStackParamList } from './index';
 
 // type LoginScreenProps = {
@@ -11,13 +12,17 @@ import { StackNavigationProp } from '@react-navigation/stack';
 const LoginScreen = ({  }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+ const router = useRouter();
   const handleLogin = () => {
     // navigation.navigate('Home');
+    router.push('/HomeScreen');
   };
+ 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} 
+    
+     >
       <Text style={styles.title}>Connexion</Text>
 
       <TextInput
