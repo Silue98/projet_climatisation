@@ -1,27 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, TextInput, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera'; // Utilisation de useCameraPermissions
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import QRCode from 'react-native-qrcode-svg';
 
-export default function LoginScreen() {
+export default function HomeScreen() {
   const [screen, setScreen] = useState('home');
   const [scanned, setScanned] = useState(false);
   const [qrData, setQrData] = useState('');
-  const [permission, requestPermission] = useCameraPermissions(); // Hook pour gérer les permissions
+  const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
-
-  const clients = [
-    { id: '1', name: 'Client A', clim: 'Climatiseur LG' },
-    { id: '2', name: 'Client B', clim: 'Climatiseur Samsung' },
-    { id: '4', name: 'Client C', clim: 'Climatiseur Illux' },
-    { id: '5', name: 'Client D', clim: 'Climatiseur Panasonic' },
-    { id: '6', name: 'Client E', clim: 'Climatiseur Daikin' },
-    { id: '7', name: 'Client F', clim: 'Climatiseur Mitsubishi' },
-    { id: '8', name: 'Client G', clim: 'Climatiseur Hisense' },
-    { id: '9', name: 'Client H', clim: 'Climatiseur Gree' },
-    { id: '10', name: 'Client I', clim: 'Climatiseur TCL' },
-    { id: '11', name: 'Client J', clim: 'Climatiseur Midea' },
-  ];
+  const [modalVisible, setModalVisible] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [clientName, setClientName] = useState('');
+  const [brand, setBrand] = useState('');
+  const [model, setModel] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [generatedQrData, setGeneratedQrData] = useState('');
+  const [clients, setClients] = useState([
+    { id: '1', name: 'Kone', Secondname: '', clim: 'Climatiseur LG' },
+    { id: '2', name: 'Dosso', clim: 'Climatiseur Samsung' },
+    { id: '4', name: 'Soumahoro', clim: 'Climatiseur Illux' },
+    { id: '5', name: 'keita', clim: 'Climatiseur Panasonic' },
+    { id: '6', name: 'Kouamé', clim: 'Climatiseur Daikin' },
+    { id: '7', name: 'Asso', clim: 'Climatiseur Mitsubishi' },
+    { id: '8', name: 'Akissi', clim: 'Climatiseur Hisense' },
+    { id: '9', name: 'yao', clim: 'Climatiseur Gree' },
+    { id: '10', name: 'nguessan', clim: 'Climatiseur TCL' },
+    { id: '11', name: 'Kouame', clim: 'Climatiseur Midea' },
+  ]);
 
   // Demande de permission pour la caméra
   useEffect(() => {
@@ -31,10 +38,49 @@ export default function LoginScreen() {
   }, [screen, permission]);
 
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
-  setScanned(true);
-  setQrData(data);
-  Alert.alert('QR Code scanné', `Données : ${data}`);
-};
+    setScanned(true);
+    setQrData(data);
+    try {
+      const parsedData = JSON.parse(data);
+      setClientName(parsedData.clientName || '');
+      setBrand(parsedData.brand || '');
+      setModel(parsedData.model || '');
+      setSerialNumber(parsedData.serialNumber || '');
+      setModalVisible(true);
+    } catch {
+      Alert.alert('QR Code scanné', `Données : ${data}`);
+    }
+  };
+
+  const handleAddClient = () => {
+    if (clientName && brand && model) {
+      const newClient = {
+        id: Date.now().toString(),
+        name: clientName,
+        Secondname: '',
+        clim: `Climatiseur ${brand} ${model}`,
+        serialNumber,
+      };
+      setClients([...clients, newClient]);
+      // Generate QR code data
+      const qrData = JSON.stringify({
+        clientName,
+        brand,
+        model,
+        serialNumber,
+      });
+      setGeneratedQrData(qrData);
+      setClientName('');
+      setBrand('');
+      setModel('');
+      setSerialNumber('');
+      setModalVisible(false);
+      setQrModalVisible(true); // Show QR code modal
+      Alert.alert('Succès', 'Climatiseur enregistré avec succès');
+    } else {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+    }
+  };
 
   const renderContent = () => {
     switch (screen) {
@@ -49,10 +95,17 @@ export default function LoginScreen() {
                 <View style={styles.card}>
                   <Text style={styles.client}>{item.name}</Text>
                   <Text style={styles.clim}>{item.clim}</Text>
+                  {/* {item.serialNumber && (
+                    <Text style={styles.clim}>Numéro de série: {item.serialNumber}</Text>
+                  )} */}
                 </View>
               )}
+              ListEmptyComponent={<Text style={styles.clim}>Aucun client enregistré</Text>}
             />
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setModalVisible(true)}
+            >
               <Ionicons name="add-circle-outline" size={20} color="white" />
               <Text style={styles.buttonText}>Enregistrer un climatiseur</Text>
             </TouchableOpacity>
@@ -81,9 +134,9 @@ export default function LoginScreen() {
           <View style={{ flex: 1 }}>
             <CameraView
               style={{ flex: 1 }}
-              facing="back" // Utilisation de 'facing' au lieu de 'type'
+              facing="back"
               barcodeScannerSettings={{
-                barcodeTypes: ['qr'], // Spécifier le type de code à scanner
+                barcodeTypes: ['qr'],
               }}
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
               ref={cameraRef}
@@ -109,7 +162,96 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>{renderContent()}</View>
+      <View style={styles.content}>
+        {renderContent()}
+
+        {/* Modal for air conditioner registration */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Enregistrer un climatiseur</Text>
+
+              <TextInput
+                style={styles.input}
+                placeholder="Nom du client"
+                value={clientName}
+                onChangeText={setClientName}
+                autoCapitalize="words"
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Marque"
+                value={brand}
+                onChangeText={setBrand}
+                autoCapitalize="words"
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Modèle"
+                value={model}
+                onChangeText={setModel}
+                autoCapitalize="words"
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Numéro de série (optionnel)"
+                value={serialNumber}
+                onChangeText={setSerialNumber}
+                autoCapitalize="characters"
+              />
+
+              <TouchableOpacity style={styles.button} onPress={handleAddClient}>
+                <Text style={styles.buttonText}>Ajouter</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#ff4444' }]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal for displaying generated QR code */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={qrModalVisible}
+          onRequestClose={() => setQrModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>QR Code Généré</Text>
+              {generatedQrData ? (
+                <QRCode
+                  value={generatedQrData}
+                  size={200}
+                  backgroundColor="#fff"
+                  color="#000"
+                />
+              ) : (
+                <Text>Aucune donnée QR à afficher</Text>
+              )}
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: '#ff4444', marginTop: 20 }]}
+                onPress={() => setQrModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Fermer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
 
       {/* Barre de navigation en bas */}
       <View style={styles.navbar}>
@@ -194,5 +336,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
     color: '#666',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  input: {
+    height: 50,
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
 });

@@ -1,28 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { useRouter } from 'expo-router';
-// import { RootStackParamList } from './index';
 
-// type LoginScreenProps = {
-//   navigation: StackNavigationProp<RootStackParamList, 'Login'>;
-// };
-
-const LoginScreen = ({  }) => {
+const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
- const router = useRouter();
+  const router = useRouter();
+
   const handleLogin = () => {
-    // navigation.navigate('Home');
-    router.push('/HomeScreen');
+    // Redirection vers la HomeScreen
+    router.push('/HomeScreen'); // Ensure this path matches your file structure
   };
- 
 
   return (
-    <SafeAreaView style={styles.container} 
-    
-     >
+    <SafeAreaView style={styles.container}>
+      {/* Logo centré */}
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('../assets/images/sice.png')} // Verify this path
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
       <Text style={styles.title}>Connexion</Text>
 
       <TextInput
@@ -50,6 +51,11 @@ const LoginScreen = ({  }) => {
   );
 };
 
+// Set navigation options to hide the header
+LoginScreen.options = {
+  headerShown: false,
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -57,11 +63,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: '#f5f5f5',
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  logo: {
+    width: 150,
+    height: 150,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
     color: '#333',
   },
   input: {

@@ -20,7 +20,7 @@
 //     <SafeAreaView style={styles.container}>
 //       <Text style={styles.title}>Connexion</Text>
 
-//       <TextInput
+//       <TextInputnn
 //         style={styles.input}
 //         placeholder="Email"
 //         value={email}
